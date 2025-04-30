@@ -1,5 +1,3 @@
-import './styles.css';
-
 // Smooth scroll for internal links
 const internalLinks = document.querySelectorAll('a[href^="#"]');
 internalLinks.forEach(link => {
