@@ -4,6 +4,11 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Vibe Projects Gallery</title>
+    <meta property="og:title" content="Built with Vibe" />
+    <meta property="og:description" content="Explore projects created using the Vibe Coding approach." />
+    <meta property="og:image" content="https://builtwithvibe.com/logo-preview.png" />
+    <meta property="og:url" content="https://builtwithvibe.com/projects" />
+    <meta name="twitter:card" content="summary_large_image">
     <link rel="icon" type="image/svg+xml" href="/logo.svg">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
@@ -26,24 +31,106 @@
     </div>
     <div class="gallery" id="gallery"></div>
     <script>
+      const STAR_API = 'https://builtwithvibe-star-api.pstoev.workers.dev';
+      // Helper: slugify project title for projectId
+      function slugify(str) {
+        return str.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+      }
+      // Render projects
       fetch('/projects.yaml')
         .then(res => res.text())
         .then(text => {
           const projects = jsyaml.load(text);
           const gallery = document.getElementById('gallery');
           projects.forEach(project => {
+            const projectId = slugify(project.title);
+            // Tile container
             const tile = document.createElement('a');
             tile.className = 'tile';
             tile.href = project.url;
             tile.target = '_blank';
             tile.rel = 'noopener noreferrer';
+            // Star button container
+            const starBox = document.createElement('div');
+            starBox.className = 'star-box';
+            starBox.style.position = 'absolute';
+            starBox.style.top = '1rem';
+            starBox.style.right = '1rem';
+            starBox.style.zIndex = '2';
+            // Star button
+            const starBtn = document.createElement('button');
+            starBtn.className = 'star-btn';
+            starBtn.setAttribute('data-project-id', projectId);
+            starBtn.style.background = 'rgba(34,40,49,0.85)';
+            starBtn.style.color = '#ffd700';
+            starBtn.style.border = 'none';
+            starBtn.style.borderRadius = '999px';
+            starBtn.style.padding = '0.3em 0.8em';
+            starBtn.style.fontSize = '1.1rem';
+            starBtn.style.fontWeight = 'bold';
+            starBtn.style.cursor = 'pointer';
+            starBtn.style.display = 'flex';
+            starBtn.style.alignItems = 'center';
+            starBtn.style.gap = '0.35em';
+            starBtn.title = 'Star this project';
+            // Star count span
+            const starCount = document.createElement('span');
+            starCount.className = 'star-count';
+            starCount.textContent = '…';
+            // Prevent navigation on star click
+            starBtn.onclick = e => e.stopPropagation();
+            // Add elements
+            starBtn.innerHTML = '⭐ ';
+            starBtn.appendChild(starCount);
+            starBox.appendChild(starBtn);
+            // Tile content
             tile.innerHTML = `
               <img src="${project.screenshot}" alt="${project.title} screenshot" onerror="this.src='/logo.svg'" />
               <div class="tile-title">${project.title}</div>
             `;
+            // Position star box in tile
+            tile.style.position = 'relative';
+            tile.appendChild(starBox);
             gallery.appendChild(tile);
+            // Fetch current star count
+            fetch(`${STAR_API}/?projectId=${encodeURIComponent(projectId)}`)
+              .then(r => r.ok ? r.json() : { stars: 0 })
+              .then(data => { starCount.textContent = data.stars ?? 0; })
+              .catch(() => { starCount.textContent = '0'; });
+            // Disable if already starred
+            if (localStorage.getItem('starred-' + projectId)) {
+              starBtn.disabled = true;
+              starBtn.title = 'You already starred this project';
+              starBtn.style.opacity = '0.6';
+            }
+            // Handle star click
+            starBtn.addEventListener('click', function(e) {
+              e.preventDefault();
+              if (starBtn.disabled) return;
+              starBtn.disabled = true;
+              fetch(STAR_API, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ projectId })
+              })
+                .then(r => r.json())
+                .then(data => {
+                  starCount.textContent = data.stars ?? '1';
+                  localStorage.setItem('starred-' + projectId, '1');
+                  starBtn.title = 'You already starred this project';
+                  starBtn.style.opacity = '0.6';
+                })
+                .catch(() => {
+                  starBtn.disabled = false;
+                  alert('Network error: Could not star project.');
+                });
+            });
           });
         });
     </script>
+    <style>
+      .star-box { pointer-events: auto; }
+      .star-btn:disabled { cursor: not-allowed; filter: grayscale(0.4); }
+    </style>
   </body>
 </html>
