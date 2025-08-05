@@ -10,3 +10,7 @@
 - title: Is This QR Safe?
   url: https://www.isthisqrsafe.com/
   screenshot: /is_qr.png
+- title: ArXiv Research Explorer
+  url: https://arxiv-sparkle.lovable.app/
+  screenshot: /arxiv_papers.png
+  
