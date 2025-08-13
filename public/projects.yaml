@@ -1,9 +1,6 @@
 - title: vcpedia.com
   url: https://vcpedia.com/
   screenshot: /placeholder-vcpedia.png
-- title: CentML Status Page
-  url: https://centmlllmstatuspage.vendor-accounts.workers.dev
-  screenshot: /placeholder-centml.png
 - title: Turn Menus Into Magic
   url: https://www.menugen.app/
   screenshot: /placeholder-menugen.png
@@ -13,4 +10,7 @@
 - title: ArXiv Research Explorer
   url: https://arxiv-sparkle.lovable.app/
   screenshot: /arxiv_papers.png
+- title: CentML Status Page
+  url: https://centmlllmstatuspage.vendor-accounts.workers.dev
+  screenshot: /placeholder-centml.png
   

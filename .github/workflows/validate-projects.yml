@@ -1,0 +1,44 @@
+name: Validate Project Entries
+
+on:
+  pull_request:
+    paths:
+      - 'public/projects.yaml'
+      - 'public/*.png'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - run: pip install pyyaml
+      - name: Validate YAML and screenshots
+        run: |
+          python - <<'PY'
+          import os, sys, yaml
+          with open('public/projects.yaml', 'r', encoding='utf-8') as f:
+              data = yaml.safe_load(f)
+          if not isinstance(data, list):
+              print("projects.yaml must be a YAML list")
+              sys.exit(1)
+          failed = False
+          for item in data:
+              for key in ("title", "url", "screenshot"):
+                  if key not in item or not item[key]:
+                      print(f"Missing {key} in item: {item}")
+                      failed = True
+              shot = (item.get("screenshot") or "").lstrip("/")
+              # Allow subpaths but require file in repo
+              path = os.path.join("public", shot)
+              if not os.path.isfile(path):
+                  print(f"Screenshot file not found: {path}")
+                  failed = True
+              if not str(item.get("url", "")).startswith("https://"):
+                  print(f"URL must start with https:// : {item.get('url')}")
+                  failed = True
+          if failed:
+              sys.exit(1)
+          PY
